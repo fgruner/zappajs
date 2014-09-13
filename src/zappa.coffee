@@ -23,6 +23,7 @@ serveStatic = require 'serve-static'
 serveIndex = require 'serve-index'
 csurf = require 'csurf'
 morgan = require 'morgan'
+compression = require 'compression'
 
 vendor = (name) ->
   fs.readFileSync(path.join(__dirname,'..','vendor',name)).toString()
@@ -379,11 +380,8 @@ zappa.app = ->
         options.saveUninitialized ?= yes
         esession options
       sessionRedis: (options) ->
-#        console.log "Options:",options
         redis_options = options.connectRedis
-#        console.log "redis:",redis_options
         session_options = options.session
-#        console.log "session:",session_options
         RedisStore = require('connect-redis')(esession)
         sessionStore = new RedisStore(redis_options)
         context.session_store = sessionStore
@@ -393,9 +391,7 @@ zappa.app = ->
         esession session_options
       sessionMongo: (options) ->
         mongo_options = options.connectMongo
-#        console.log "redis:",mongo_options
         session_options = options.session
-#        console.log "session:",session_options
         MongoStore = require('connect-mongo')(esession)
         sessionStore = new MongoStore(mongo_options)
         context.session_store = sessionStore
@@ -408,12 +404,14 @@ zappa.app = ->
       bodyParser: ->
         bodyParser.json()
         bodyParser.urlencoded extended:yes
+      legacyBodyParser:bodyParser extended:yes
       responseTime: responseTime
       cookieParser: cookieParser
       methodOverride: methodOverride
       directory: serveIndex
       csrf: (options) ->
         csurf options
+      compression:compression
 
     use = (name, arg = null) ->
       if zappa_middleware[name]
